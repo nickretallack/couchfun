@@ -1,0 +1,5 @@
+*.xml
+.*.swp
+*.pyc
+*.zip
+*.cache
