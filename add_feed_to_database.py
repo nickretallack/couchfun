@@ -145,8 +145,8 @@ class BulkImporter(object):
     # Enable this if you want to see how much slower things go with it.
     """ 
     for name in offer_hash:
-      headers, response = h.request('%s/offer-%s' % (database_url,name), 'GET', headers={'Accept':'application/json'})
-      offer_data = json.loads(response)
+      response, content = h.request('%s/offer-%s' % (database_url,name), 'GET', headers={'Accept':'application/json'})
+      offer_data = json.loads(content)
       if not 'error' in offer_data:
         # ensures we are updating the latest version
         offer_hash[name]['_rev'] = offer_data['_rev']
@@ -155,7 +155,12 @@ class BulkImporter(object):
     """
 
     body = '{"docs":%s}' % json.dumps(self.queue)
-    #headers, response = h.request('%s/_bulk_docs' % database_url, 'POST', body=body, headers={"Content-type": "application/json"})
+    response, content = h.request('%s/_bulk_docs' % database_url, 'POST', body=body, headers={"Content-type": "application/json"})
+    if response.status != 201:
+      print "\n%s:\n%s\n\nOriginal Request Body:\n%s\n" % (response.reason, response, body)
+      exit()
+    
+    # IMPORTANT! Clear the queue!
     self.queue = []
 
 
