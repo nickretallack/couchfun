@@ -12,7 +12,7 @@ class ClickBankSaxHandler(sax.ContentHandler):
     self.new_site = {}
     self.counter = 0
     self.import_queue = import_queue
-    self.offer_set = {}
+    self.sites_found = {}
   
   def startElement(self,name,attrs):
     self.structure.append(name)
@@ -29,9 +29,10 @@ class ClickBankSaxHandler(sax.ContentHandler):
       
     if name == 'Site':
       self.new_site['categories'] = self.categories[:]
-      self.import_queue.add(self.new_site)
-      
-      self.offer_set[self.new_site['Name']]= 1
+
+      if not self.new_site['Name'] in self.sites_found:
+        self.import_queue.add(self.new_site)
+      self.sites_found[self.new_site['Name']]= 1
       
       # in case we wanted to limit the number of imports
       self.counter += 1
@@ -44,7 +45,7 @@ class ClickBankSaxHandler(sax.ContentHandler):
   def endDocument(self):
     self.import_queue.finish()
     print "There are %d offers" % self.counter
-    print "%d are unique" % len(self.offer_set)
+    print "%d are unique" % len(self.sites_found)
 
   def characters(self,string):
     if self.structure[-1] == 'Name' and self.structure[-2] == 'Category':
@@ -116,18 +117,18 @@ class BulkImporter(object):
       offer_hash[name] = item
       offer_map[name] = 1
 
-    view = """
-    {"map":"function(doc){
-      hash = %s;
-      if (hash[doc.Name]) {emit(null, {'_rev':doc._rev,'Name':doc.Name});}
-    }"}
-    """ % json.dumps(offer_map).replace('"',"'")
+    #view = """
+    #{"map":"function(doc){
+    #  hash = %s;
+    #  if (hash[doc.Name]) {emit(null, {'_rev':doc._rev,'Name':doc.Name});}
+    #}"}
+    #""" % json.dumps(offer_map).replace('"',"'")
 
-    view2 = """
-    {"map":"function(doc){
-      emit(null,doc.Name)
-    }"}
-    """
+    #view2 = """
+    #{"map":"function(doc){
+    #  emit(null,doc.Name)
+    #}"}
+    #"""
 
     #print view
     

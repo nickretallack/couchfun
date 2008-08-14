@@ -1,0 +1,2 @@
+Dependencies: httplib2, simplejson
+both available via easy_install
