@@ -1,2 +1,21 @@
-Hello, $name
+#if $page != 0
+<a href="/?page=${page-1}">&larr; Prev</a>
+#end if
+Page $page
 
+#if not $last_page
+<a href="/?page=${page+1}">Next &rarr;</a>
+#end if
+
+#for $offer in $offers
+<div>
+  <a href="/$offer.key">$offer.key</a> | 
+  Commission: $offer.value.Commission |
+  Chargeback: $offer.value.Chargeback |
+  Gravity: $offer.value.Gravity |
+  Referred: $offer.value.Referred |
+  Rebill: $offer.value.Rebill
+</div>
+
+
+#end for

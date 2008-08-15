@@ -59,16 +59,20 @@ class ClickBankSaxHandler(sax.ContentHandler):
       if field == 'Id':
         self.new_site['Name'] = string
         
-      if field in ['Title','Description']:
+      elif field in ['Title','Description']:
         self.new_site[field] = string
         
-      if field == "PopularityRank":
+      # TODO: HANDLE THIS PER CATEGORY!
+      elif field == "PopularityRank":
         self.new_site[field] = int(string)
+
+      elif field in ["Commission","TotalRebillAmt"]:
+        self.new_site[field] = int(float(string))
         
-      if field in ["PercentPerSale","Referred"]:
+      elif field in ["PercentPerSale","Referred"]:
         self.new_site[field] = int(float(string) * 10) # NOTE: why are we doing this?
       
-      if field in ["Gravity","EarnedPerSale","TotalEarningsPerSale","TotalRebillAmt"]:
+      elif field in ["Gravity","EarnedPerSale","TotalEarningsPerSale","TotalRebillAmt"]:
         self.new_site[field] = int(float(string) * 100) # NOTE: seriously, these numbers seem messed up.
       
   def skippedEntity(self,name):
@@ -117,6 +121,7 @@ class BulkImporter(object):
       offer_hash[name] = item
       offer_map[name] = 1
 
+    
     #view = """
     #{"map":"function(doc){
     #  hash = %s;
@@ -154,12 +159,12 @@ class BulkImporter(object):
         # TODO: add some other updates here!
         # Like, add entries to the histogram    
     """
-
+    
     body = '{"docs":%s}' % json.dumps(self.queue)
-    response, content = h.request('%s/_bulk_docs' % database_url, 'POST', body=body, headers={"Content-type": "application/json"})
-    if response.status != 201:
-      print "\n%s:\n%s\n\nOriginal Request Body:\n%s\n" % (response.reason, response, body)
-      exit()
+    #response, content = h.request('%s/_bulk_docs' % database_url, 'POST', body=body, headers={"Content-type": "application/json"})
+    #if response.status != 201:
+    #  print "\n%s:\n%s\n\nOriginal Request Body:\n%s\n" % (response.reason, response, body)
+    #  exit()
     
     # IMPORTANT! Clear the queue!
     self.queue = []
@@ -188,6 +193,18 @@ if __name__ == "__main__":
     parser.parse(file_name)
 
 default_feed = 'marketplace_feed_v1.xml'
+
+
+"""
+Ideas on doing histories:
+
+How about a feed document, with all the new information in it?
+  perhaps we could reduce this by offer name/id and still serve it up in the index view?
+
+
+
+
+"""
 
 
 # file_path = path.join(path.dirname(__file__),file_name)

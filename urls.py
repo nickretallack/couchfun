@@ -1,36 +1,33 @@
 import web
-from web.contrib.template import render_cheetah
+#from web.contrib.template import render_cheetah
 from settings import database_url
 from httplib2 import Http
 import simplejson as json
+from web.cheetah import render
 
 #import tenjin
 #template = tenjin.Engine()
 web.webapi.internalerror = web.debugerror   # enables debugger
-render = render_cheetah('templates')
+#render = render_cheetah('templates')
 
 
 urls = ('/','index','/(.*)','offer')
 
-index_view = """
-{
-  "map":"function(doc){
-    emit(null,doc)
-  }"
-}
-"""
-
+offers_per_page = 1000
 
 class index:
   def GET(self):
-    #print render.index()
+    page = int(web.input(page=0)['page'])
     h = Http()
-    headers, response = h.request('%s/_temp_view?count=20' % database_url, 'POST', body=index_view,headers={"Accept": "application/json"})
-    offers = json.loads(response)['rows']
-    return render.index(offers=offers,name=name)
-    #print offers
-    #print template.render("templates/index.html",{'offers':offers})
-    #print response
+    response,content = h.request('%s/_view/offers/index?count=%d&skip=%d' % (database_url, offers_per_page, offers_per_page*page))
+    stuff = json.loads(content)
+    print len(stuff['rows']), "rows"
+    return
+    
+    last_page = False
+    if stuff['total_rows'] - stuff['offset'] <= offers_per_page:
+      last_page = True
+    return render('index.html',{'offers':stuff['rows'],'page':page,'last_page':last_page})
 
 
 if __name__ == "__main__":
